@@ -92,8 +92,7 @@ def main():
     args = parser.parse_args()
     
     # bundle_names = natsorted(glob(join(args.d, "*")))
-    bundle_names = natsorted(glob(args.d))
-
+    bundle_names = natsorted(glob(join(args.d)))
     
     for bundle_name in bundle_names:
         print("Processing {0}.".format(bundle_name.split("/")[-1]))

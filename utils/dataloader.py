@@ -29,12 +29,13 @@ class BundleDataset(Dataset):
         
         ref_img = self.bundle['img_{0}'.format(args.reference_idx)].astype(np.float32)/255
         ref_img = resize(ref_img, (args.height, args.width), order=1)
-        ref_img = np.moveaxis(ref_img, 2, 0)
+        ref_img = np.moveaxis(ref_img, 2, 0) # (HWC -> CHW)
         
         ref_depth = self.bundle['depth_{0}'.format(args.reference_idx)].astype(np.float32)
         ref_depth = resize(ref_depth, (args.height, args.width), order=1)
         ref_depth = ref_depth[None,:,:] # Insert dummy channel
         
+        # confidence map
         ref_conf = self.bundle['conf_{0}'.format(args.reference_idx)].astype(np.float32)
         ref_conf = resize(ref_conf, (args.height, args.width), order=1)
         ref_conf = ref_conf[None,:,:] # Insert dummy channel
@@ -63,7 +64,7 @@ class BundleDataset(Dataset):
                 self.forward_transforms.append(eye_like(self.ref_camera_to_world))
             else:
                 qry_world_to_camera = torch.from_numpy(self.bundle['info_{0}'.format(idx)].item()['world_to_camera'])[None].float()
-                forward_transform = qry_world_to_camera @ self.ref_camera_to_world
+                forward_transform = qry_world_to_camera @ self.ref_camera_to_world # ref->w->w->qry
                 self.forward_transforms.append(forward_transform)
 
         self.world_to_cameras = torch.cat(self.world_to_cameras, dim=0)

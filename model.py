@@ -86,22 +86,22 @@ class ImplicitDepthNet(nn.Module):
         self.dims = torch.tensor([args.height - 1, args.width - 1], device=args.device)[None,:,None] # [1,2,1]
         
     def forward(self, rays, confidence):
-        yx = torch.clone(rays[:,:3])
-        yx[:,:2] += 5e-2*torch.randn_like(yx[:,:2])
+        yx = torch.clone(rays[:,:3]) # rays(1, 367, 4096), yx(1, 3, 4096)
+        yx[:,:2] += 5e-2*torch.randn_like(yx[:,:2]) 
         yx[:,:2] = (yx[:,:2]/self.dims)  # Normalize to 0 to 1
                 
-        yx_encoded = self.positional_encoder(yx)
+        yx_encoded = self.positional_encoder(yx) # yx_encoded(1, 39, 4096)
         
-        M = self.args.patch_size ** 2
-        N = (M - 1) // 2
-        mlp_in = torch.cat((yx_encoded, rays[:,[4+N, 4+N+M, 4+N+2*M]]), dim=1) # Select center rgb values
+        M = self.args.patch_size ** 2 # 11*2
+        N = (M - 1) // 2 # 60
+        mlp_in = torch.cat((yx_encoded, rays[:,[4+N, 4+N+M, 4+N+2*M]]), dim=1) # Select center rgb values (1, 42, 4096)
         
-        z_out = self.FCNet(mlp_in)
+        z_out = self.FCNet(mlp_in) # ([1, 1, 4096])
     
-        mlp_rays = torch.clone(rays)
+        mlp_rays = torch.clone(rays) # ([1, 367, 4096])
         z_out = mlp_rays[:,2:3] + F.relu(confidence) * z_out
-        z_out[z_out < 0.05] = 0.05
-        mlp_rays[:,2:3] = z_out
+        z_out[z_out < 0.05] = 0.05 # adjusted based on confidence ensured that the output depth is at least 0.05
+        mlp_rays[:,2:3] = z_out # replaces the original depth in mlp_rays with the estimated depth from the network. 
          
         return mlp_rays
     

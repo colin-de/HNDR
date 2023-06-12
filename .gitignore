@@ -1,9 +1,11 @@
 **/__pycache__
 **/**.pt
 data/
+data_processed/
 .DS_Store
 temp/
 run.sh
 third_party/
 out/
 arc.sh
+checkpoints/
